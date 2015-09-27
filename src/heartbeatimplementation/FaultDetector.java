@@ -16,7 +16,7 @@ import java.rmi.server.UnicastRemoteObject;
  * @author neloh
  */
 public class FaultDetector extends UnicastRemoteObject implements RmiServerIntf {
-    int checkingInterval = 15000; //in miliseconds
+    static int checkingInterval = 15000; //in miliseconds
     long checkingTime;
     long expireTime;
     long lastUpdatedTime;
@@ -31,6 +31,7 @@ public class FaultDetector extends UnicastRemoteObject implements RmiServerIntf 
             isAlive = false;
         
         if(!isAlive){
+             //RMI the fault monitor
             //Raise exception
         }
             

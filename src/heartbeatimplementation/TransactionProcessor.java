@@ -16,24 +16,37 @@ import java.util.logging.Logger;
  *
  * @author neloh
  */
-public class TransactionProcessor {
-    int sendingInverval = 10000;
+public class TransactionProcessor implements Runnable{
+    int sendingInverval = 1000;
     int lastTransactionProcessedTime; 
     boolean isActive;
     
-    public static void main(String[] args) {
+    public static void main(String[] args) throws InterruptedException {
+        TransactionProcessor transProcessor=new TransactionProcessor();
+        new Thread(transProcessor).start();
+        while(true){
+            transProcessor.sendAliveSignal();
+            Thread.sleep(transProcessor.sendingInverval);
+        }
+        
+    }
+    
+    void processTransaction(){
+       
+    }
+    
+    void sendAliveSignal(){
+        //InvokePitAPat in Fault detector
         try {
             RmiServerIntf obj = (RmiServerIntf)Naming.lookup("//localhost/RmiServer");
             obj.pitAPat();
         } catch (NotBoundException | MalformedURLException | RemoteException ex) {
             Logger.getLogger(TransactionProcessor.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
     }
-    
-    void processTransaction(){}
-    
-    void sendAliveSignal(){
-        //InvokePitAPat in Fault detector
+
+    @Override
+    public void run() {
+        processTransaction();
     }
 }

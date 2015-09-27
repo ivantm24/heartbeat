@@ -11,4 +11,7 @@ package heartbeatimplementation;
  */
 public class FaultMonitor {
     
+    void logMessage(){
+    //Display error message in the console
+    }
 }

@@ -17,5 +17,10 @@ public class TransactionProcessor {
     public static void main(String[] args) {
         
     }
+    
     void processTransaction(){}
+    
+    void sendAliveSignal(){
+        //InvokePitAPat in Fault detector
+    }
 }

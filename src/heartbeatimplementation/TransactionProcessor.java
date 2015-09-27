@@ -7,15 +7,15 @@ package heartbeatimplementation;
 
 /**
  *
- * @author ivantactukmercado
+ * @author neloh
  */
-public class HeartbeatImplementation {
-
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String[] args) {
-        // TODO code application logic here
-    }
+public class TransactionProcessor {
+    int sendingInverval = 10000;
+    int lastTransactionProcessedTime; 
+    boolean isActive;
     
+    public static void main(String[] args) {
+        
+    }
+    void processTransaction(){}
 }

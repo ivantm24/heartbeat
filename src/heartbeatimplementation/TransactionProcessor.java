@@ -30,5 +30,10 @@ public class TransactionProcessor {
         }
         
     }
+    
     void processTransaction(){}
+    
+    void sendAliveSignal(){
+        //InvokePitAPat in Fault detector
+    }
 }

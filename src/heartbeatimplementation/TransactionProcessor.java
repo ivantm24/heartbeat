@@ -70,20 +70,12 @@ public class TransactionProcessor implements Runnable{
         try {
             RmiServerIntf obj = (RmiServerIntf)Naming.lookup("//localhost/RmiServer");
 
-
-
-
             if (id==null){
                 id=obj.getId();
             }
             obj.pitAPat(id);
             System.out.println("Beat");
-=======
-            if (id==null){
-                id=obj.getId();
-            }
-            obj.pitAPat(id);
->>>>>>> origin/master
+
         } catch (NotBoundException | MalformedURLException | RemoteException ex) {
             Logger.getLogger(TransactionProcessor.class.getName()).log(Level.SEVERE, null, ex);
         }

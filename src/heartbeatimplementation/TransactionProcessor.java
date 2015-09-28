@@ -35,11 +35,6 @@ public class TransactionProcessor implements Runnable{
             Thread.sleep(transProcessor.sendingInverval);
         }
         
-        /*
-        TransactionProcessor TP = new TransactionProcessor();
-        while(true){
-            TP.processTransaction();
-        */
     }
        
     TransactionProcessor(){
@@ -61,9 +56,9 @@ public class TransactionProcessor implements Runnable{
         r.setSeed(System.currentTimeMillis());
         
         for(Integer accountBal: accounts){
-            Integer divisor = r.nextInt(100);
-            int result;
-             System.out.println(result = accountBal/divisor);
+            Integer divisor = r.nextInt(2000);
+            int result = accountBal/divisor;
+             System.out.println("Transaction Processed: Result ="+ result);
         }
         
     }
@@ -73,6 +68,7 @@ public class TransactionProcessor implements Runnable{
         try {
             RmiServerIntf obj = (RmiServerIntf)Naming.lookup("//localhost/RmiServer");
             obj.pitAPat();
+            System.out.println("Beat");
         } catch (NotBoundException | MalformedURLException | RemoteException ex) {
             Logger.getLogger(TransactionProcessor.class.getName()).log(Level.SEVERE, null, ex);
         }

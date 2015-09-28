@@ -22,6 +22,8 @@ public class TransactionProcessor implements Runnable{
     static int sendingInverval = 1000;
     int lastTransactionProcessedTime; 
     boolean isActive;
+    Integer id=null;
+    
     int numberOfAccounts = 1000;
     ArrayList<Integer> accounts = new ArrayList<>();
     ArrayList<Integer> divisors = new ArrayList<>();
@@ -67,7 +69,13 @@ public class TransactionProcessor implements Runnable{
         //InvokePitAPat in Fault detector
         try {
             RmiServerIntf obj = (RmiServerIntf)Naming.lookup("//localhost/RmiServer");
-            obj.pitAPat();
+
+
+
+            if (id==null){
+                id=obj.getId();
+            }
+            obj.pitAPat(id);
             System.out.println("Beat");
         } catch (NotBoundException | MalformedURLException | RemoteException ex) {
             Logger.getLogger(TransactionProcessor.class.getName()).log(Level.SEVERE, null, ex);

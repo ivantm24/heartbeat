@@ -13,5 +13,6 @@ import java.rmi.RemoteException;
  * @author ivantactukmercado
  */
 public interface RmiServerIntf extends Remote{
-    public void pitAPat()throws RemoteException;
+    public int getId()throws RemoteException;
+    public void pitAPat(int id)throws RemoteException;
 }

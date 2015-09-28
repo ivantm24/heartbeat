@@ -10,6 +10,7 @@ import java.rmi.Naming;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.HashMap;
 
 /**
  *
@@ -21,6 +22,8 @@ public class FaultDetector extends UnicastRemoteObject implements RmiServerIntf 
     long expireTime;
     long lastUpdatedTime;
     boolean isAlive  = true;
+    int lastId=0;
+    HashMap<Integer, Long> lastUpdatedTimeMap=new HashMap<>();
     
     public FaultDetector() throws RemoteException {
         super(0);    // required to avoid the 'rmic' step
@@ -60,14 +63,21 @@ public class FaultDetector extends UnicastRemoteObject implements RmiServerIntf 
     }
 
     @Override
-    public void pitAPat(){
-        System.out.println("pitAPat");
-        updateTime();
+    public void pitAPat(int id){
+        System.out.println("pitAPat"+id);
+        updateTime(id);
     }
 
-    void updateTime(){
+    void updateTime(int id){
+        this.lastUpdatedTimeMap.put(id, System.currentTimeMillis());
         this.lastUpdatedTime = System.currentTimeMillis() / 1000L;
         this.expireTime = lastUpdatedTime + checkingInterval;
+    }
+
+    @Override
+    public int getId() throws RemoteException {
+        lastId++;
+        return lastId;
     }
 
 }

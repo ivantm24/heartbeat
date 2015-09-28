@@ -11,17 +11,23 @@ import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.ArrayList;
+import java.util.Random;
 
 /**
  *
  * @author neloh
  */
 public class TransactionProcessor implements Runnable{
-    int sendingInverval = 1000;
+    static int sendingInverval = 1000;
     int lastTransactionProcessedTime; 
     boolean isActive;
     Integer id=null;
     
+    int numberOfAccounts = 1000;
+    ArrayList<Integer> accounts = new ArrayList<>();
+    ArrayList<Integer> divisors = new ArrayList<>();
+    Random r = new Random();
     
     public static void main(String[] args) throws InterruptedException {
         TransactionProcessor transProcessor=new TransactionProcessor();
@@ -31,10 +37,37 @@ public class TransactionProcessor implements Runnable{
             Thread.sleep(transProcessor.sendingInverval);
         }
         
+        /*
+        TransactionProcessor TP = new TransactionProcessor();
+        while(true){
+            TP.processTransaction();
+        */
+    }
+       
+    TransactionProcessor(){
+        //Fill accounts and divisors
+        Random rand = new Random();
+        rand.setSeed(System.currentTimeMillis());
+        for (int i=0; i<numberOfAccounts; i++){
+            Integer r = rand.nextInt() % 256;
+            accounts.add(r);
+        }
+
+        for (int i=0; i<numberOfAccounts; i++){
+            Integer r = rand.nextInt(100);
+            divisors.add(r);
+        }
     }
     
     void processTransaction(){
-       
+        r.setSeed(System.currentTimeMillis());
+        
+        for(Integer accountBal: accounts){
+            Integer divisor = r.nextInt(100);
+            int result;
+             System.out.println(result = accountBal/divisor);
+        }
+        
     }
     
     void sendAliveSignal(){

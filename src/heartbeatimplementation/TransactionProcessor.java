@@ -20,6 +20,8 @@ public class TransactionProcessor implements Runnable{
     int sendingInverval = 1000;
     int lastTransactionProcessedTime; 
     boolean isActive;
+    Integer id=null;
+    
     
     public static void main(String[] args) throws InterruptedException {
         TransactionProcessor transProcessor=new TransactionProcessor();
@@ -39,7 +41,10 @@ public class TransactionProcessor implements Runnable{
         //InvokePitAPat in Fault detector
         try {
             RmiServerIntf obj = (RmiServerIntf)Naming.lookup("//localhost/RmiServer");
-            obj.pitAPat();
+            if (id==null){
+                id=obj.getId();
+            }
+            obj.pitAPat(id);
         } catch (NotBoundException | MalformedURLException | RemoteException ex) {
             Logger.getLogger(TransactionProcessor.class.getName()).log(Level.SEVERE, null, ex);
         }

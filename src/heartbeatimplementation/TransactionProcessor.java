@@ -39,11 +39,6 @@ public class TransactionProcessor implements Runnable{
             Thread.sleep(transProcessor.sendingInverval);
         }
         
-        /*
-        TransactionProcessor TP = new TransactionProcessor();
-        while(true){
-            TP.processTransaction();
-        */
     }
     
     Thread.UncaughtExceptionHandler h= new Thread.UncaughtExceptionHandler(){
@@ -90,10 +85,13 @@ public class TransactionProcessor implements Runnable{
         //InvokePitAPat in Fault detector
         try {
             RmiServerIntf obj = (RmiServerIntf)Naming.lookup("//localhost/RmiServer");
+
             if (id==null){
                 id=obj.getId();
             }
             obj.pitAPat(id);
+            System.out.println("Beat");
+
         } catch (NotBoundException | MalformedURLException | RemoteException ex) {
             Logger.getLogger(TransactionProcessor.class.getName()).log(Level.SEVERE, null, ex);
         }

@@ -34,6 +34,7 @@ public class FaultDetector extends UnicastRemoteObject implements RmiServerIntf,
     }
     
     void checkAlive(){
+        isAlive=true;
         if(System.currentTimeMillis()  > expireTime){
             isAlive = false;
             System.out.println("isAlive=False");

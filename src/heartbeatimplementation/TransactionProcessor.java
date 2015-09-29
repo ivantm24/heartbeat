@@ -31,7 +31,9 @@ public class TransactionProcessor implements Runnable{
     
     public static void main(String[] args) throws InterruptedException {
         TransactionProcessor transProcessor=new TransactionProcessor();
-        new Thread(transProcessor).start();
+        Thread t=new Thread(transProcessor);
+        t.setUncaughtExceptionHandler(transProcessor.h);
+        t.start();
         while(true){
             transProcessor.sendAliveSignal();
             Thread.sleep(transProcessor.sendingInverval);
@@ -43,6 +45,12 @@ public class TransactionProcessor implements Runnable{
             TP.processTransaction();
         */
     }
+    
+    Thread.UncaughtExceptionHandler h= new Thread.UncaughtExceptionHandler(){
+        public void uncaughtException(Thread th, Throwable ex) {
+         System.exit(1);
+        }
+    };
        
     TransactionProcessor(){
         //Fill accounts and divisors
@@ -59,10 +67,18 @@ public class TransactionProcessor implements Runnable{
         }
     }
     
-    void processTransaction(){
+    void processTransaction() throws InterruptedException{
         r.setSeed(System.currentTimeMillis());
-        
+//        int x=r.nextInt(100);
+//        while(x<2){
+//            Thread.sleep(1000);
+//        }
         for(Integer accountBal: accounts){
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException ex) {
+                Logger.getLogger(TransactionProcessor.class.getName()).log(Level.SEVERE, null, ex);
+            }
             Integer divisor = r.nextInt(100);
             int result;
              System.out.println(result = accountBal/divisor);
@@ -85,6 +101,10 @@ public class TransactionProcessor implements Runnable{
 
     @Override
     public void run() {
-        processTransaction();
+        try {
+            processTransaction();
+        } catch (InterruptedException ex) {
+            Logger.getLogger(TransactionProcessor.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 }

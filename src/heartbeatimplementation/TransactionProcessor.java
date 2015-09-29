@@ -19,7 +19,7 @@ import java.util.Random;
  * @author neloh
  */
 public class TransactionProcessor implements Runnable{
-    static int sendingInverval = 10000;
+    static int sendingInverval = 1000;
     int lastTransactionProcessedTime; 
     boolean isActive;
     Integer id=null;

@@ -20,9 +20,8 @@ import java.util.Random;
  */
 public class TransactionProcessor implements Runnable{
     static int sendingInverval = 1000;
-    int lastTransactionProcessedTime; 
     boolean isActive;
-    Integer id=null;
+    Integer id = null;
     
     int numberOfAccounts = 1000;
     ArrayList<Integer> accounts = new ArrayList<>();

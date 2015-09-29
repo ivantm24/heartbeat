@@ -75,8 +75,8 @@ public class TransactionProcessor implements Runnable{
                 Logger.getLogger(TransactionProcessor.class.getName()).log(Level.SEVERE, null, ex);
             }
             Integer divisor = r.nextInt(100);
-            int result;
-             System.out.println(result = accountBal/divisor);
+            int result= accountBal/divisor;
+             System.out.println("Transaction Processed: Result ="+ result );
         }
         
     }

@@ -1,7 +1,8 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+ * This class is the Domain class, it simulates a Scheduled Transaction Processor
+for a bank.
+We simulate processing scheduled transactions by dividing a random number by another random number
+that can sometimes be 0 and produce an unhandled exception
  */
 package heartbeatimplementation;
 
@@ -16,21 +17,21 @@ import java.util.Random;
 
 /**
  *
- * @author neloh
+ * @author Leonardo Matos & Ivan Taktuk
  */
 public class TransactionProcessor implements Runnable{
-    static int sendingInverval = 1000;
-    boolean isActive;
-    Integer id = null;
-    
-    int numberOfAccounts = 1000;
-    ArrayList<Integer> accounts = new ArrayList<>();
-    ArrayList<Integer> divisors = new ArrayList<>();
-    Random r = new Random();
+    static int sendingInverval = 1000; //How often the beat is sent
+    boolean isActive; //Used for the active redundancy to be implemented
+    boolean isSpare; //Used for the passive redundancy to be implemented
+    Integer id = null; //The id of the TransactionProcessor
+   
+    ArrayList<Integer> transactions = new ArrayList<>(); //Represents an array of account transactions that are 
+    //scheduled to be processed, we emulate this by dividing a random number by another random number, the 
+    //divisor can sometimes be 0 and thus produce an exception
     
     public static void main(String[] args) throws InterruptedException {
         TransactionProcessor transProcessor=new TransactionProcessor();
-        Thread t=new Thread(transProcessor);
+        Thread t = new Thread(transProcessor);
         t.setUncaughtExceptionHandler(transProcessor.h);
         t.start();
         while(true){
@@ -47,35 +48,29 @@ public class TransactionProcessor implements Runnable{
     };
        
     TransactionProcessor(){
-        //Fill accounts and divisors
+        //The TransactionProcessor transactions arrayList is filled with random numbers
         Random rand = new Random();
         rand.setSeed(System.currentTimeMillis());
-        for (int i=0; i<numberOfAccounts; i++){
-            Integer r = rand.nextInt() % 256;
-            accounts.add(r);
-        }
-
-        for (int i=0; i<numberOfAccounts; i++){
-            Integer r = rand.nextInt(100);
-            divisors.add(r);
+        for (int i=0; i<1000; i++){
+            transactions.add(rand.nextInt() % 256);
         }
     }
     
     void processTransaction() throws InterruptedException{
+        Random r = new Random();
         r.setSeed(System.currentTimeMillis());
-//        int x=r.nextInt(100);
-//        while(x<2){
-//            Thread.sleep(1000);
-//        }
-        for(Integer accountBal: accounts){
+
+        for(Integer transactionID: transactions){
             try {
                 Thread.sleep(500);
             } catch (InterruptedException ex) {
                 Logger.getLogger(TransactionProcessor.class.getName()).log(Level.SEVERE, null, ex);
             }
             Integer divisor = r.nextInt(100);
-            int result= accountBal/divisor;
-             System.out.println("Transaction Processed: Result ="+ result );
+            //Here we simulate processing a transaction by dividing a random number with another that can
+            //sometimes be 0
+            int result= transactionID/divisor;
+             System.out.println("Transaction Processed: Result="+result+", Divisor="+ divisor );
         }
         
     }
@@ -97,6 +92,7 @@ public class TransactionProcessor implements Runnable{
     }
 
     @Override
+    //Start the thread
     public void run() {
         try {
             processTransaction();

@@ -1,7 +1,6 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+ * This class monitors the hearbeat and is used to display failure messages and in
+real life log the failures in a database, or other tasks.
  */
 package heartbeatimplementation;
 
@@ -13,7 +12,7 @@ import java.rmi.server.UnicastRemoteObject;
 
 /**
  *
- * @author neloh
+ * @author Leonardo Matos & Ivan Taktuk
  */
 public class FaultMonitor extends UnicastRemoteObject implements RmiFaultMonitorIntf{
     
@@ -38,12 +37,14 @@ public class FaultMonitor extends UnicastRemoteObject implements RmiFaultMonitor
         
     }
     
-    void logMessage(){
-    //Display error message in the console
+    //Logs the error message, in this case it just displays it on the console
+    void logMessage(String message){
+        System.out.println(message);
     }
 
     @Override
+    //Method that manages what to do when the Transaction Processor is not alive
     public void NotAlive(int id) throws RemoteException {
-        System.out.println("Transaction Processor "+id+" has failed");
+        logMessage("Transaction Processor "+id+" has failed at "+System.currentTimeMillis());
     }
 }

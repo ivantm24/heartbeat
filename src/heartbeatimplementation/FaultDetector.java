@@ -7,6 +7,7 @@ package heartbeatimplementation;
 
 import java.net.MalformedURLException;
 import java.rmi.Naming;
+import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.server.UnicastRemoteObject;
@@ -25,6 +26,7 @@ public class FaultDetector extends UnicastRemoteObject implements RmiServerIntf,
     long lastUpdatedTime;
     boolean isAlive  = true;
     int lastId=0;
+    int lastUpdatedId=0;
     HashMap<Integer, Long> lastUpdatedTimeMap=new HashMap<>();
     
     public FaultDetector() throws RemoteException {
@@ -35,13 +37,19 @@ public class FaultDetector extends UnicastRemoteObject implements RmiServerIntf,
         if(System.currentTimeMillis()  > expireTime){
             isAlive = false;
             System.out.println("isAlive=False");
-            System.out.println(expireTime);
         }
             
         
         if(!isAlive){
              //RMI the fault monitor
             //Raise exception
+            try {
+                RmiFaultMonitorIntf obj = (RmiFaultMonitorIntf)Naming.lookup("//localhost/RmiMonitor");
+                obj.NotAlive(lastUpdatedId);
+                System.out.println("Fault Monitor was notified");
+            } catch (NotBoundException | MalformedURLException | RemoteException ex) {
+                Logger.getLogger(TransactionProcessor.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
             
     }
@@ -71,16 +79,16 @@ public class FaultDetector extends UnicastRemoteObject implements RmiServerIntf,
 
     @Override
     public void pitAPat(int id){
-        System.out.println("pitAPat"+id);
+        System.out.println("Beat Received from Trasaction Processor "+id);
         isAlive=true;
         updateTime(id);
     }
 
     void updateTime(int id){
-        this.lastUpdatedTimeMap.put(id, System.currentTimeMillis());
+        //this.lastUpdatedTimeMap.put(id, System.currentTimeMillis());
         this.lastUpdatedTime = System.currentTimeMillis() ;
         this.expireTime = lastUpdatedTime + checkingInterval;
-        System.out.println("expireTime"+expireTime);
+        this.lastUpdatedId=id;
     }
 
     @Override

@@ -70,7 +70,7 @@ public class TransactionProcessor implements Runnable{
 //        }
         for(Integer accountBal: accounts){
             try {
-                Thread.sleep(1000);
+                Thread.sleep(500);
             } catch (InterruptedException ex) {
                 Logger.getLogger(TransactionProcessor.class.getName()).log(Level.SEVERE, null, ex);
             }

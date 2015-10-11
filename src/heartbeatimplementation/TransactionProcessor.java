@@ -46,7 +46,7 @@ public class TransactionProcessor implements Runnable{
         System.setProperty("java.net.preferIPv4Stack" , "true");
         TransactionProcessor transProcessor=new TransactionProcessor();
         transProcessor.getId();
-        
+        System.out.println("Transaction Processor id "+transProcessor.id+" waiting to be activated");
         new Thread()
         {
             public void run() {

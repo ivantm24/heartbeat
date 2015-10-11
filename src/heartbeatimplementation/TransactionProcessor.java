@@ -178,7 +178,7 @@ public class TransactionProcessor implements Runnable{
             ProcIdTransIdMap.put(data[0], data[1]);
             ProcIdLastTimeMap.put(data[0], System.currentTimeMillis());
             
-            System.out.println("MulticastReceived: " + received);
+            //System.out.println("MulticastReceived: " + received);
             if (shouldBeRunning()){
                 break;
             }
@@ -189,7 +189,6 @@ public class TransactionProcessor implements Runnable{
     }
     
     public void updatePeers(Integer processId,Integer transactionId){
-        System.out.println("up");
         MulticastSocket socket = null;
         try {
             socket = new MulticastSocket(multicastPort);

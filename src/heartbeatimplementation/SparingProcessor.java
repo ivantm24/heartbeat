@@ -25,6 +25,7 @@ public class SparingProcessor extends UnicastRemoteObject implements RmiSparingI
     }
     
     public static void main(String[] args) throws RemoteException, MalformedURLException {
+        System.setProperty("java.net.preferIPv4Stack" , "true");
         try { 
             LocateRegistry.createRegistry(1099); 
             System.out.println("java RMI registry created.");
@@ -47,7 +48,8 @@ public class SparingProcessor extends UnicastRemoteObject implements RmiSparingI
         try {
             System.out.println("trying activating");
             Thread.sleep(3000);
-            TransactionProcessor.main(args);
+            TransactionProcessor pr=new TransactionProcessor();
+                    pr.main(args);
         } catch (InterruptedException | IOException ex) {
             Logger.getLogger(SparingProcessor.class.getName()).log(Level.SEVERE, null, ex);
         }

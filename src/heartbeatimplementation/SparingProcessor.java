@@ -20,6 +20,8 @@ import java.util.logging.Logger;
  */
 public class SparingProcessor extends UnicastRemoteObject implements RmiSparingInt{
     
+    boolean activated=false;
+    
     public SparingProcessor() throws RemoteException{
         super(0);    // required to avoid the 'rmic' step
     }
@@ -44,14 +46,20 @@ public class SparingProcessor extends UnicastRemoteObject implements RmiSparingI
 
     @Override
     public void activate() throws RemoteException {
-        String[] args=new String[1];
-        try {
-            System.out.println("trying activating");
-            Thread.sleep(3000);
-            TransactionProcessor pr=new TransactionProcessor();
-                    pr.main(args);
-        } catch (InterruptedException | IOException ex) {
-            Logger.getLogger(SparingProcessor.class.getName()).log(Level.SEVERE, null, ex);
-        }
+        if (activated) return;
+        new Thread(){
+            public void run() {
+                String[] args=new String[1];
+                try {
+                    activated=true;
+                    System.out.println("trying activating");
+                    TransactionProcessor pr=new TransactionProcessor();
+                            pr.main(args);
+                } catch (InterruptedException | IOException ex) {
+                    Logger.getLogger(SparingProcessor.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        }.start();
+        
     }
 }

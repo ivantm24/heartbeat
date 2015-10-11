@@ -55,7 +55,7 @@ public class FaultMonitor extends UnicastRemoteObject implements RmiFaultMonitor
             RmiSparingInt obj = (RmiSparingInt)Naming.lookup("//localhost/RmiSparing");
             obj.activate();
         } catch (NotBoundException | MalformedURLException | RemoteException ex) {
-            Logger.getLogger(TransactionProcessor.class.getName()).log(Level.SEVERE, null, ex);
+            logMessage("Fault Monitor was not able to restart sparing Transaction Processor");
         }
         logMessage("Done trying restarting");
     }

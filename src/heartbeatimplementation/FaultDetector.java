@@ -27,6 +27,7 @@ public class FaultDetector extends UnicastRemoteObject implements RmiServerIntf,
     static int lastId=0;
     static int lastUpdatedId=0;
     HashMap<Integer, Long> lastUpdatedTimeMap=new HashMap<>();
+    static int consecutiveNotAliveNotifications=0;
     
     public FaultDetector() throws RemoteException {
         super(0);    // required to avoid the 'rmic' step
@@ -37,6 +38,8 @@ public class FaultDetector extends UnicastRemoteObject implements RmiServerIntf,
         if(System.currentTimeMillis()  > expireTime){
             isAlive = false;
             System.out.println("isAlive=False");
+        }else{
+            consecutiveNotAliveNotifications=0;
         }
             
         
@@ -44,8 +47,11 @@ public class FaultDetector extends UnicastRemoteObject implements RmiServerIntf,
              //Notify the monitor if it is not alive
             try {
                 RmiFaultMonitorIntf obj = (RmiFaultMonitorIntf)Naming.lookup("//localhost/RmiMonitor");
+                if (consecutiveNotAliveNotifications<1){
                 obj.NotAlive(lastUpdatedId);
+                consecutiveNotAliveNotifications++;
                 System.out.println("Fault Monitor was notified about a failure");
+                }
             } catch (NotBoundException | MalformedURLException | RemoteException ex) {
                 Logger.getLogger(TransactionProcessor.class.getName()).log(Level.SEVERE, null, ex);
             }

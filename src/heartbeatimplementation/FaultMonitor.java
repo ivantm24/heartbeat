@@ -47,4 +47,9 @@ public class FaultMonitor extends UnicastRemoteObject implements RmiFaultMonitor
     public void NotAlive(int id) throws RemoteException {
         logMessage("Transaction Processor "+id+" has failed at "+System.currentTimeMillis());
     }
+
+    @Override
+    public void WasReplaced(int p_id, int n_id) throws RemoteException {
+        logMessage("Transaction Processor "+n_id+" took over Transaction Processor "+p_id+" at "+System.currentTimeMillis());
+    }
 }

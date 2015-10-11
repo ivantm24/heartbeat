@@ -13,5 +13,6 @@ import java.rmi.RemoteException;
  * @author ivantactukmercado
  */
 public interface RmiFaultMonitorIntf extends Remote{
-    public void NotAlive(int id)throws RemoteException;    
+    public void NotAlive(int id)throws RemoteException; 
+    public void WasReplaced(int p_id,int n_id)throws RemoteException; 
 }

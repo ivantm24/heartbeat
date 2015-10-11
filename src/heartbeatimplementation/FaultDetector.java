@@ -45,7 +45,7 @@ public class FaultDetector extends UnicastRemoteObject implements RmiServerIntf,
             try {
                 RmiFaultMonitorIntf obj = (RmiFaultMonitorIntf)Naming.lookup("//localhost/RmiMonitor");
                 obj.NotAlive(lastUpdatedId);
-                System.out.println("Fault Monitor was notified");
+                System.out.println("Fault Monitor was notified about a failure");
             } catch (NotBoundException | MalformedURLException | RemoteException ex) {
                 Logger.getLogger(TransactionProcessor.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -87,6 +87,15 @@ public class FaultDetector extends UnicastRemoteObject implements RmiServerIntf,
     void updateTime(int id){
         this.lastUpdatedTime = System.currentTimeMillis() ;
         this.expireTime = lastUpdatedTime + checkingInterval;
+        if (this.lastUpdatedId!=id){
+            try {
+                RmiFaultMonitorIntf obj = (RmiFaultMonitorIntf)Naming.lookup("//localhost/RmiMonitor");
+                obj.WasReplaced(lastUpdatedId,id);
+                System.out.println("Fault Monitor was notified about change of Transaction Processor");
+            } catch (NotBoundException | MalformedURLException | RemoteException ex) {
+                Logger.getLogger(FaultDetector.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
         this.lastUpdatedId=id;
     }
 

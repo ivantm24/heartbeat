@@ -6,13 +6,20 @@ that can sometimes be 0 and produce an unhandled exception
  */
 package heartbeatimplementation;
 
+import java.io.IOException;
+import static java.lang.Thread.sleep;
+import java.net.DatagramPacket;
+import java.net.InetAddress;
 import java.net.MalformedURLException;
+import java.net.MulticastSocket;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map.Entry;
 import java.util.Random;
 
 /**
@@ -24,13 +31,39 @@ public class TransactionProcessor implements Runnable{
     boolean isActive; //Used for the active redundancy to be implemented
     boolean isSpare; //Used for the passive redundancy to be implemented
     Integer id = null; //The id of the TransactionProcessor
-   
+    static int peersUpdateInterval=500;
     ArrayList<Integer> transactions = new ArrayList<>(); //Represents an array of account transactions that are 
     //scheduled to be processed, we emulate this by dividing a random number by another random number, the 
     //divisor can sometimes be 0 and thus produce an exception
+    String multicastAddress="225.0.0.1";
+    int multicastPort=4447;
+    HashMap<String,String> ProcIdTransIdMap=new HashMap<>();
+    HashMap<String,Long> ProcIdLastTimeMap=new HashMap<>();
+    int consecutiveReceptions=0;
+    int lastTransaction=-1;
     
-    public static void main(String[] args) throws InterruptedException {
+    public static void main(String[] args) throws InterruptedException, IOException {
+        System.setProperty("java.net.preferIPv4Stack" , "true");
         TransactionProcessor transProcessor=new TransactionProcessor();
+        transProcessor.getId();
+        
+        new Thread()
+        {
+            public void run() {
+                for(int i=0;i<4;i++){
+                    transProcessor.updatePeers(transProcessor.id,0);
+                    try {
+                        sleep(peersUpdateInterval);
+                    } catch (InterruptedException ex) {
+                        Logger.getLogger(TransactionProcessor.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+            }
+        }.start();
+        
+        transProcessor.listenMulticast();
+        
+        
         Thread t = new Thread(transProcessor);
         t.setUncaughtExceptionHandler(transProcessor.h);
         t.start();
@@ -52,7 +85,7 @@ public class TransactionProcessor implements Runnable{
         Random rand = new Random();
         rand.setSeed(System.currentTimeMillis());
         for (int i=0; i<1000; i++){
-            transactions.add(rand.nextInt() % 256);
+            transactions.add(i+1);
         }
     }
     
@@ -61,8 +94,9 @@ public class TransactionProcessor implements Runnable{
         r.setSeed(System.currentTimeMillis());
 
         for(Integer transactionID: transactions){
+            if (transactionID<lastTransaction) continue;
             try {
-                Thread.sleep(500);
+                Thread.sleep(peersUpdateInterval);
             } catch (InterruptedException ex) {
                 Logger.getLogger(TransactionProcessor.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -70,9 +104,22 @@ public class TransactionProcessor implements Runnable{
             //Here we simulate processing a transaction by dividing a random number with another that can
             //sometimes be 0
             int result= transactionID/divisor;
-             System.out.println("Transaction Processed: Result="+result+", Divisor="+ divisor );
+            updatePeers(this.id, transactionID);
+            lastTransaction=transactionID;
+             System.out.println("Transaction #"+ transactionID.toString()+" Processed: Result="+result+", Divisor="+ divisor );
         }
         
+    }
+    
+    void getId(){
+        try {
+            RmiServerIntf obj = (RmiServerIntf)Naming.lookup("//localhost/RmiServer");
+            if (id==null){
+                id=obj.getId();
+            }            
+        } catch (NotBoundException | MalformedURLException | RemoteException ex) {
+            Logger.getLogger(TransactionProcessor.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
     
     void sendAliveSignal(){
@@ -100,4 +147,115 @@ public class TransactionProcessor implements Runnable{
             Logger.getLogger(TransactionProcessor.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
+
+    
+    public void listenMulticast() throws IOException, InterruptedException{
+        MulticastSocket socket = new MulticastSocket(multicastPort);
+        InetAddress group = InetAddress.getByName(multicastAddress);
+        socket.joinGroup(group);
+        
+        DatagramPacket packet;
+        while (true) {
+            byte[] buf = new byte[256];
+            packet = new DatagramPacket(buf, buf.length);
+            socket.receive(packet);
+            String received = new String(packet.getData()).trim();
+            String[] data=received.split(":");
+            if (Integer.parseInt(data[0])==this.id) {
+                consecutiveReceptions++;                  
+            }else{
+                consecutiveReceptions=0;                 
+            }
+                            
+            if (ProcIdLastTimeMap.containsKey(this.id.toString())){
+                if (System.currentTimeMillis()- ProcIdLastTimeMap.get(id.toString())<peersUpdateInterval+1) {               
+                    updatePeers(id, 0);
+                    sleep(peersUpdateInterval);
+                }
+            }
+            
+            
+            ProcIdTransIdMap.put(data[0], data[1]);
+            ProcIdLastTimeMap.put(data[0], System.currentTimeMillis());
+            
+            System.out.println("MulticastReceived: " + received);
+            if (shouldBeRunning()){
+                break;
+            }
+        }
+
+        socket.leaveGroup(group);
+        socket.close();
+    }
+    
+    public void updatePeers(Integer processId,Integer transactionId){
+        System.out.println("up");
+        MulticastSocket socket = null;
+        try {
+            socket = new MulticastSocket(multicastPort);
+            byte[] buf = new byte[256];
+            // don't wait for request...just send a quote
+
+            String dString = processId.toString()+":"+transactionId.toString();
+            buf = dString.getBytes();
+
+            InetAddress group = InetAddress.getByName(multicastAddress);
+            DatagramPacket packet;
+            packet = new DatagramPacket(buf, buf.length, group, multicastPort);
+            socket.send(packet);
+
+           
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+            
+        }
+        finally{
+            if(socket!=null)
+                socket.close();
+        }
+        
+    }
+    
+    public boolean shouldBeRunning(){
+        int lowestId=this.id;
+        boolean allAreInactive=true;
+        ArrayList<String> expiredProcId=new ArrayList<>();
+        for(Entry<String, Long> entry : ProcIdLastTimeMap.entrySet()) {
+            Integer idProcess =Integer.parseInt(entry.getKey());
+            Long lastTime = entry.getValue();
+            int transId=Integer.parseInt(ProcIdTransIdMap.get(entry.getKey()));
+            if(lastTransaction<transId){
+                lastTransaction=transId;
+            }
+            if (!ProcIdTransIdMap.get(entry.getKey()).equals("0")){
+                allAreInactive=false;
+            }
+            if (System.currentTimeMillis()-lastTime>peersUpdateInterval*2){
+                //has expired
+                expiredProcId.add(entry.getKey());
+            }
+            if (idProcess<lowestId){
+                lowestId=idProcess;
+            }
+        }
+        for(String id:expiredProcId){
+            ProcIdLastTimeMap.remove(id);
+            ProcIdTransIdMap.remove(id);
+        }
+        
+        if (consecutiveReceptions>=4){
+            return true;
+        }
+        if (allAreInactive && ProcIdLastTimeMap.size()>1 && lowestId==id){
+            return true;
+        }
+        
+        if (ProcIdLastTimeMap.size()<=0){
+            return true;
+        }
+        
+        return false;
+    }
+   
 }

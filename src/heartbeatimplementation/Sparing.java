@@ -1,0 +1,55 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package heartbeatimplementation;
+
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.rmi.Naming;
+import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.server.UnicastRemoteObject;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+/**
+ *
+ * @author ivantactukmercado
+ */
+public class Sparing extends UnicastRemoteObject implements RmiSparingInt{
+    
+    public Sparing() throws RemoteException{
+        super(0);    // required to avoid the 'rmic' step
+    }
+    
+    public static void main(String[] args) throws RemoteException, MalformedURLException {
+        try { 
+            LocateRegistry.createRegistry(1099); 
+            System.out.println("java RMI registry created.");
+        } catch (RemoteException e) {
+            System.out.println("java RMI registry already exists.");
+        }
+           
+        //Instantiate RmiServer
+        Sparing obj = new Sparing();
+
+        // Bind this object instance to the name 
+        Naming.rebind("//localhost/RmiSparing", obj);
+        System.out.println("Sparing started");
+        
+    }
+
+    @Override
+    public void activate() throws RemoteException {
+        String[] args=new String[1];
+        try {
+            System.out.println("trying activating");
+            Thread.sleep(3000);
+            TransactionProcessor.main(args);
+        } catch (InterruptedException | IOException ex) {
+            Logger.getLogger(Sparing.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+}

@@ -4,11 +4,15 @@ real life log the failures in a database, or other tasks.
  */
 package heartbeatimplementation;
 
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.rmi.Naming;
+import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -46,6 +50,14 @@ public class FaultMonitor extends UnicastRemoteObject implements RmiFaultMonitor
     //Method that manages what to do when the Transaction Processor is not alive
     public void NotAlive(int id) throws RemoteException {
         logMessage("Transaction Processor "+id+" has failed at "+System.currentTimeMillis());
+        logMessage("Fault Monitor is trying to restart spare Transaction Processor");
+        try {
+            RmiSparingInt obj = (RmiSparingInt)Naming.lookup("//localhost/RmiSparing");
+            obj.activate();
+        } catch (NotBoundException | MalformedURLException | RemoteException ex) {
+            Logger.getLogger(TransactionProcessor.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        logMessage("Done trying restarting");
     }
 
     @Override

@@ -15,7 +15,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class ThreadPool {
     private final Thread[] workerThreads;
     private volatile boolean shutdown;
-    private final BlockingQueue<Runnable> workerQueue;
+    private final BlockingQueue<Executable> workerQueue;
     
     
     public ThreadPool(int N){
@@ -23,6 +23,37 @@ public class ThreadPool {
         this.workerQueue=new LinkedBlockingQueue<>();
         for (int i = 0; i < N; i++) {
             this.workerThreads[i]=new Worker("Thread "+i);
+            this.workerThreads[i].setUncaughtExceptionHandler(h);
+            this.workerThreads[i].start();
+        }
+    }
+    
+    Thread.UncaughtExceptionHandler h= new Thread.UncaughtExceptionHandler(){
+        public void uncaughtException(Thread th, Throwable ex) {
+         System.exit(1);
+        }
+    };
+    
+    public void shutdown()
+    {
+        while (!workerQueue.isEmpty()) {
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {                
+            }
+        }
+        shutdown = true;
+        for (Thread workerThread : workerThreads) {
+            workerThread.interrupt();
+        }
+    }
+    
+    public void addTask(Executable ex)
+    {
+        try {
+            workerQueue.put(ex);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
     }
     
@@ -35,8 +66,8 @@ public class ThreadPool {
         public void run(){
             while(!shutdown){
                 try{
-                    Runnable r=workerQueue.take();
-                    r.run();
+                    Executable ex=workerQueue.take();
+                    ex.execute();
                 }catch(InterruptedException e){
                     
                 }

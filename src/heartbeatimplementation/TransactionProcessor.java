@@ -21,6 +21,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map.Entry;
 import java.util.Random;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  *
@@ -41,6 +43,7 @@ public class TransactionProcessor implements Runnable{
     HashMap<String,Long> ProcIdLastTimeMap=new HashMap<>();
     int consecutiveReceptions=0;
     int lastTransaction=-1;
+    private final BlockingQueue<Integer> transactionQueue=new LinkedBlockingQueue<>();
     
     public static void main(String[] args) throws InterruptedException, IOException {
         System.setProperty("java.net.preferIPv4Stack" , "true");
@@ -92,6 +95,8 @@ public class TransactionProcessor implements Runnable{
     void processTransaction() throws InterruptedException{
         Random r = new Random();
         r.setSeed(System.currentTimeMillis());
+        
+        ThreadPool pool=new ThreadPool(5);
 
         for(Integer transactionID: transactions){
             if (transactionID<lastTransaction) continue;
@@ -100,13 +105,10 @@ public class TransactionProcessor implements Runnable{
             } catch (InterruptedException ex) {
                 Logger.getLogger(TransactionProcessor.class.getName()).log(Level.SEVERE, null, ex);
             }
-            Integer divisor = r.nextInt(100);
+            pool.addTask(new RequestReader());
             //Here we simulate processing a transaction by dividing a random number with another that can
             //sometimes be 0
-            int result= transactionID/divisor;
-            updatePeers(this.id, transactionID);
-            lastTransaction=transactionID;
-             System.out.println("Transaction #"+ transactionID.toString()+" Processed: Result="+result+", Divisor="+ divisor );
+            pool.addTask(new RequestResponder(this.id, transactionID));
         }
         
     }
@@ -257,4 +259,48 @@ public class TransactionProcessor implements Runnable{
         return false;
     }
    
+    private class RequestReader implements Executable{
+
+        @Override
+        public void execute() {
+            Random rand = new Random();
+            rand.setSeed(System.currentTimeMillis());
+            Integer divisor = rand.nextInt(100);
+            System.out.println("Request Read by Thread id="+Thread.currentThread().getId());
+            try{
+                transactionQueue.put(divisor);
+                Thread.sleep(100);
+            }catch(InterruptedException e){
+                
+            }
+        }
+        
+    }
+    private class RequestResponder implements Executable{
+
+        Integer transactionId, processId;
+        
+        public RequestResponder(int processId,int transId){
+            this.processId=processId;
+            this.transactionId=transId;
+        }
+        
+        @Override
+        public void execute() {
+            try {
+                Integer divisor = transactionQueue.take();
+            //Here we simulate processing a transaction by dividing a random number with another that can
+            //sometimes be 0
+                int result= this.transactionId/divisor;
+                updatePeers(this.processId, this.transactionId);
+                lastTransaction=this.transactionId;
+                System.out.println("Transaction #"+ this.transactionId.toString()+" Processed: Result="+result+", Divisor="+ divisor+", Thread Id="+Thread.currentThread().getId() );
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+        
+    }
+    
 }
